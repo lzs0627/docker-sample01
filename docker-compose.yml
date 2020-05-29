@@ -1,0 +1,55 @@
+version: '3'
+services:
+ https-portal:
+  image: steveltn/https-portal
+  ports:
+   - 80:80
+   - 443:443
+  restart: always
+  environment:
+   STAGE: local
+   DOMAINS: 'example-site1.jp -> http://example-site1.jp, example-site2.jp -> http://example-site2.jp'
+  networks:
+   - docker-net-001
+ mysql:
+   image: mysql:5.7
+   container_name: php56-apache-mysql
+   volumes:
+    - "./.data/mysql:/var/lib/mysql"
+   restart: always
+   environment:
+    MYSQL_ROOT_PASSWORD: rootpwd@12345
+    # MYSQL_DATABASE: wordpress
+    # MYSQL_USER: wordpress
+    # MYSQL_PASSWORD: wdpwd@12345
+   networks:
+    - docker-net-001
+
+ phpmyadmin:
+   image: phpmyadmin/phpmyadmin
+   container_name: php56-apache-phpmyadmin
+   environment:
+    - PMA_HOST=php56-apache-mysql
+   ports:
+    - "3333:80"
+   networks:
+    - docker-net-001
+
+ web:
+   #build: webserver
+   image: php:5.6-apache
+   container_name: php56-apache-web
+   volumes:
+    - "./html:/var/www/html"
+    #- "./htdocs:/var/www/htdocs"
+    - "./apache.conf:/etc/apache2/sites-enabled"
+   #ports:
+   # - "8080:80"
+   networks:
+    docker-net-001:
+     aliases:
+      - example-site1.jp
+      - example-site2.jp
+networks:
+ docker-net-001:
+  
